@@ -1,86 +1,64 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'core/constants/app_colors.dart';
-import 'shared/widgets/custom_bottom_nav.dart';
-import 'features/auth/presentation/pages/login_page.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'core/theme/app_theme.dart';
+import 'shared/widgets/main_navigation.dart';
+import 'features/auth/login_page.dart';
+import 'core/services/user_provider.dart';
 
 void main() async {
-  // Required for Firebase plugins
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Firebase
-  await Firebase.initializeApp();
-  
-  runApp(const ACFConnectApp());
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+  }
+
+  await Hive.initFlutter();
+  await EasyLocalization.ensureInitialized();
+
+  runApp(
+    ProviderScope(
+      child: EasyLocalization(
+        supportedLocales: const [Locale('en', 'US'), Locale('ha', 'NG')],
+        path: 'assets/translations',
+        fallbackLocale: const Locale('en', 'US'),
+        child: const ACFConnectApp(),
+      ),
+    ),
+  );
 }
 
-class ACFConnectApp extends StatelessWidget {
+class ACFConnectApp extends ConsumerWidget {
   const ACFConnectApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ACF Connect',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: AppColors.primaryGreen,
-        // ... keep your existing theme settings
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.primaryGreen,
-          foregroundColor: AppColors.white,
-          elevation: 0,
-        ),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: AppColors.white,
-          selectedItemColor: AppColors.primaryGreen,
-        ),
-      ),
-      // We define routes here
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const LoginPage(), // Start at Login
-        '/home': (context) => const MainScreen(), // Go to home after login
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(userProvider);
+
+    return ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'ACF Connect',
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: context.localizationDelegates,
+          supportedLocales: context.supportedLocales,
+          locale: context.locale,
+          home: authState.when(
+            data: (user) => user != null ? const MainNavigationScreen() : const LoginPage(),
+            loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+            error: (e, s) => Scaffold(body: Center(child: Text('Error: $e'))),
+          ),
+          debugShowCheckedModeBanner: false,
+        );
       },
-    );
-  }
-}
-
-// ... Keep the MainScreen and CustomBottomNav code exactly as it was before
-
-// This is the container that will hold our 5 screens later
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
-
-  @override
-  State<MainScreen> createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
-
-  // Placeholder pages - we will replace these with real screens later
-  final List<Widget> _pages = [
-    const Center(child: Text("Gwamnati (Updates)")),
-    const Center(child: Text("Tattaunawa (Chat)")),
-    const Center(child: Text("Tari (Status)")),
-    const Center(child: Text("Taro (Events)")),
-    const Center(child: Text("Aiki (Mobilize)")),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_currentIndex],
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-      ),
     );
   }
 }
