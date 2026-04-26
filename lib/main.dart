@@ -51,11 +51,7 @@ class ACFConnectApp extends ConsumerWidget {
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: context.locale,
-          home: authState.when(
-            data: (user) => user != null ? const MainNavigationScreen() : const LoginPage(),
-            loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-            error: (e, s) => Scaffold(body: Center(child: Text('Error: $e'))),
-          ),
+          home: const MainNavigationScreen(),
           debugShowCheckedModeBanner: false,
         );
       },
