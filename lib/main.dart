@@ -12,13 +12,17 @@ import 'core/services/user_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Initialize Firebase
   try {
     await Firebase.initializeApp();
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
   }
 
+  // Initialize Local DB
   await Hive.initFlutter();
+
+  // Initialize Localization
   await EasyLocalization.ensureInitialized();
 
   runApp(
@@ -51,7 +55,12 @@ class ACFConnectApp extends ConsumerWidget {
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: context.locale,
-          home: const MainNavigationScreen(),
+          // AUTH GATE: Automatically routes users based on login status
+          home: authState.when(
+            data: (user) => user != null ? const MainNavigationScreen() : const LoginPage(),
+            loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+            error: (e, s) => Scaffold(body: Center(child: Text('Error: $e'))),
+          ),
           debugShowCheckedModeBanner: false,
         );
       },
