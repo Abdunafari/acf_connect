@@ -1,0 +1,19 @@
+{
+  "app_title": "ACF Connect",
+  "chat": "Chat",
+  "status": "Status",
+  "event": "Event",
+  "map": "Map",
+  "profile": "Profile",
+  "login": "Login",
+  "phone_number": "Phone Number",
+  "send_otp": "Send OTP",
+  "verify_login": "Verify & Login",
+  "online": "online",
+  "type_message": "Type a message",
+  "no_messages": "No messages yet",
+  "nuna_buri": "Show Interest",
+  "total_members": "Total Members",
+  "recent_updates": "Recent updates",
+  "my_status": "My Status"
+}
